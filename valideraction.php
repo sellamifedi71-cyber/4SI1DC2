@@ -3,6 +3,7 @@ declare(strict_types=1);
 require __DIR__ . '/config.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: lanceraction.php'); exit; }
+verify_csrf();
 $mail = strtolower(trim($_POST['ae'] ?? ''));
 $name = trim($_POST['nm'] ?? '');
 $school = trim($_POST['ly'] ?? '');
