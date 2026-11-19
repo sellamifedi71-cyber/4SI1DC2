@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
+require __DIR__ . '/config.php';
 $today = date('Y-m-d');
 ?>
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Proposer une action — EcoJeunes</title><link rel="stylesheet" href="mesStyles1.css"><script src="controle.js" defer></script></head>
-<body><main class="container"><p><a href="index.html">← Accueil</a></p><h1>Proposer une action</h1><form action="valideraction.php" method="post" onsubmit="return verifAction()"><fieldset><legend>Informations du membre</legend>
+<body><main class="container"><p><a href="index.html">← Accueil</a></p><h1>Proposer une action</h1><form action="valideraction.php" method="post" onsubmit="return verifAction()"><input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>"><fieldset><legend>Informations du membre</legend>
 <label for="ae">Adresse électronique</label><input type="email" id="ae" name="ae" maxlength="100" required>
 <label for="nm">Nom et prénom</label><input type="text" id="nm" name="nm" maxlength="50" minlength="2" required>
 <label for="ly">Lycée / établissement</label><input type="text" id="ly" name="ly" maxlength="50" minlength="2" required></fieldset>
