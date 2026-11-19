@@ -20,14 +20,11 @@ if (!filter_var($mail, FILTER_VALIDATE_EMAIL) || strlen($mail) > 100 || mb_strle
 
 $con->begin_transaction();
 try {
-    $check = $con->prepare('SELECT mail FROM membre WHERE mail = ?');
-    $check->bind_param('s', $mail);
-    $check->execute();
-    if (!$check->get_result()->fetch_assoc()) {
-        $member = $con->prepare('INSERT INTO membre (mail, nom, lycee) VALUES (?, ?, ?)');
-        $member->bind_param('sss', $mail, $name, $school);
-        $member->execute();
-    }
+    // Upsert avoids a race when two submissions create the same member simultaneously.
+    // Existing member details are preserved; the submitted contact is linked to the new action.
+    $member = $con->prepare('INSERT INTO membre (mail, nom, lycee) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE mail = VALUES(mail)');
+    $member->bind_param('sss', $mail, $name, $school);
+    $member->execute();
     $action = $con->prepare('INSERT INTO action (titreAction, typeAction, dateAction, lieu, mail) VALUES (?, ?, ?, ?, ?)');
     $action->bind_param('sssss', $title, $type, $date, $place, $mail);
     $action->execute();
