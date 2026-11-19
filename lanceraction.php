@@ -1,53 +1,15 @@
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Untitled Document</title>
-</head>
-
-<body>
-	<form action="valideraction.php" method="post">
-		<fieldset>
-			<legend>information du membre</legend>
-			<label for="">adresse electronique</label>
-			<input type="text">
-			<label for=""> nom du mmebre</label>
-			<input type="text">
-			<label for="">lyceee</label>
-			<input list="l">
-			<datalist id="l">
-			<?php
-			require 'config.php';
-			$req="select distinct lycee from membre";
-			$res=mysqli_query($cnx,$req);
-			while($t=mysqli_fetch_array($res))
-			{
-				echo("<option value='$t[0]'></option>");
-			}
-			?>
-			
-			</datalist>
-		</fieldset>
-		<fieldset>
-			<legend>information sur laction</legend>
-			<label for="">titre de laction</label>
-			<input type="text">
-			<label for="">type de laction</label>
-			<select name="" id="">
-				<option value="">choisir un type</option>
-				<option value="n">nettoyage</option>
-				<option value="p">plantation</option>
-				<option value="s">sensibilation</option>
-				<option value="r">recyclage</option>
-				
-			
-			
-			</select>
-			<label for="">date de laction</label>
-			<input type="text">
-			<label for="">lieu de laction</label>
-			<input type="text">
-		</fieldset>
-	</form>
-</body>
-</html>
+<?php
+declare(strict_types=1);
+$today = date('Y-m-d');
+?>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Proposer une action — EcoJeunes</title><link rel="stylesheet" href="mesStyles1.css"><script src="controle.js" defer></script></head>
+<body><main class="container"><p><a href="index.html">← Accueil</a></p><h1>Proposer une action</h1><form action="valideraction.php" method="post" onsubmit="return verifAction()"><fieldset><legend>Informations du membre</legend>
+<label for="ae">Adresse électronique</label><input type="email" id="ae" name="ae" maxlength="100" required>
+<label for="nm">Nom et prénom</label><input type="text" id="nm" name="nm" maxlength="50" minlength="2" required>
+<label for="ly">Lycée / établissement</label><input type="text" id="ly" name="ly" maxlength="50" minlength="2" required></fieldset>
+<fieldset><legend>Informations sur l'action</legend>
+<label for="titre">Titre de l'action</label><input type="text" id="titre" name="titre" maxlength="100" minlength="5" required>
+<label for="tya">Type d'action</label><select id="tya" name="tya" required><option value="">Choisir un type</option><option value="N">Nettoyage</option><option value="P">Plantation</option><option value="S">Sensibilisation</option><option value="R">Recyclage</option></select>
+<label for="da">Date de l'action</label><input type="date" id="da" name="da" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>" required>
+<label for="li">Lieu de l'action</label><input type="text" id="li" name="li" maxlength="100" minlength="3" required></fieldset>
+<div class="actions"><button type="submit">Publier l'action</button><button type="reset" class="secondary">Réinitialiser</button></div></form></main></body></html>
