@@ -1,42 +1,24 @@
 <?php
-require 'config.php';
-$mail = $_POST['mail'];
-$idAction = $_POST['idAction'];
+declare(strict_types=1);
+require __DIR__ . '/config.php';
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: participer.php'); exit; }
+$mail = strtolower(trim($_POST['mail'] ?? ''));
+$idAction = filter_input(INPUT_POST, 'idAction', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+if (!filter_var($mail, FILTER_VALIDATE_EMAIL) || !$idAction) { http_response_code(422); exit('Adresse électronique ou action invalide.'); }
 
-/* 1. Vérifier l'existence du membre */
-$reqMembre = "SELECT * FROM membre WHERE mail='$mail'";
-$resMembre = mysqli_query($con, $reqMembre);
+$memberStmt = $con->prepare('SELECT nom, lycee FROM membre WHERE mail = ?');
+$memberStmt->bind_param('s', $mail); $memberStmt->execute(); $member = $memberStmt->get_result()->fetch_assoc();
+if (!$member) { http_response_code(404); exit('Ce membre n’existe pas encore. Proposez une action pour créer votre fiche membre, ou contactez l’association.'); }
+$actionStmt = $con->prepare('SELECT titreAction, dateAction, lieu FROM action WHERE idAction = ? AND dateAction >= CURDATE()');
+$actionStmt->bind_param('i', $idAction); $actionStmt->execute(); $action = $actionStmt->get_result()->fetch_assoc();
+if (!$action) { http_response_code(404); exit('Action introuvable ou déjà passée.'); }
 
-if (mysqli_num_rows($resMembre) == 0) {
-    echo "<h3>Ce membre n'existe pas. Veuillez vous inscrire avant de participer.</h3>";
-    exit();
+try {
+    $insert = $con->prepare('INSERT INTO participation (mail, idAction, datePart) VALUES (?, ?, CURDATE())');
+    $insert->bind_param('si', $mail, $idAction); $insert->execute();
+} catch (mysqli_sql_exception $exception) {
+    if ((int)$exception->getCode() === 1062) { http_response_code(409); exit('Vous êtes déjà inscrit à cette action.'); }
+    throw $exception;
 }
-
-/* 2. Vérifier la participation */
-$reqPart = "SELECT * FROM participation WHERE mail='$mail' AND idAction='$idAction'";
-$resPart = mysqli_query($con, $reqPart);
-
-if (mysqli_num_rows($resPart) > 0) {
-    echo "<h3>Vous avez déjà participé à cette action.</h3>";
-    exit();
-}
-
-/* 3. Insérer la participation */
-$datePart = date("Y-m-d");
-$reqInsert = "INSERT INTO participation VALUES ('$mail', '$idAction', '$datePart')";
-mysqli_query($con, $reqInsert);
-
-/* 4. Récupérer infos membre et action */
-$membre = mysqli_fetch_array($resMembre);
-
-$reqAction = "SELECT * FROM action WHERE idAction='$idAction'";
-$resAction = mysqli_query($con, $reqAction);
-$action = mysqli_fetch_array($resAction);
-
-/* 5. Affichage de l'invitation */
-echo "<h2>Invitation à participer</h2>";
-echo "<p><strong>Membre :</strong> ".$membre['nom']." (".$membre['lycee'].")</p>";
-echo "<p><strong>Action :</strong> ".$action['titreAction']."</p>";
-echo "<p><strong>Date :</strong> ".$action['dateAction']."</p>";
-echo "<p><strong>Lieu :</strong> ".$action['lieu']."</p>";
 ?>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Participation confirmée</title><link rel="stylesheet" href="mesStyles1.css"></head><body><main class="container"><p class="success">Votre participation est confirmée.</p><h2>Récapitulatif</h2><p><strong>Membre :</strong> <?= h($member['nom'] ?? '') ?> — <?= h($member['lycee'] ?? '') ?></p><p><strong>Action :</strong> <?= h($action['titreAction']) ?></p><p><strong>Date :</strong> <?= h($action['dateAction']) ?></p><p><strong>Lieu :</strong> <?= h($action['lieu']) ?></p><p><a href="liste.php">Voir les actions</a> · <a href="index.html">Accueil</a></p></main></body></html>
