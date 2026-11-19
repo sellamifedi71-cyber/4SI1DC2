@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/config.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: participer.php'); exit; }
+verify_csrf();
 $mail = strtolower(trim((string)($_POST['mail'] ?? '')));
 $idAction = filter_input(INPUT_POST, 'idAction', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 if (!filter_var($mail, FILTER_VALIDATE_EMAIL) || !$idAction) { http_response_code(422); exit('Adresse électronique ou action invalide.'); }
